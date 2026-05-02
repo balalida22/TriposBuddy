@@ -548,8 +548,8 @@ textarea.form-input { resize: vertical; }
 .admin-table tr:last-child td { border-bottom: none; }
 .admin-table tr:hover td { background: var(--bg-surface); }
 
-.admin-table-compact .admin-table th,
-.admin-table-compact .admin-table td { padding: .3rem .5rem; font-size: .78rem; }
+.admin-table.admin-table-compact th,
+.admin-table.admin-table-compact td { padding: .3rem .5rem; font-size: .78rem; }
 
 .admin-section-block { margin-bottom: 2rem; }
 .admin-section-block h2 { font-size: 1rem; margin-bottom: .6rem; font-weight: 600; }

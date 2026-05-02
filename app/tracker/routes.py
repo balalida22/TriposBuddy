@@ -5,19 +5,18 @@ from flask_login import login_required, current_user
 
 from app.tracker import bp
 from app.extensions import db
-from app.models import Question, UserQuestionProgress, SectionEnum
-
-SECTIONS = [s.value for s in SectionEnum]
-YEARS = list(range(2016, 2026))
-Q_RANGE = range(1, 13)
+from app.models import Question, UserQuestionProgress
+from app.constants import SECTIONS, YEARS, Q_RANGE
 
 
 def _build_tracker_data(solved_ids, question_map):
     """Return nested structure: section → rows (q_num) → cells (year)."""
+    max_q = max((k[2] for k in question_map), default=max(Q_RANGE))
+    q_range = range(1, max_q + 1)
     sections_data = []
     for section in SECTIONS:
         rows = []
-        for q_num in Q_RANGE:
+        for q_num in q_range:
             cells = []
             for year in YEARS:
                 q = question_map.get((section, year, q_num))

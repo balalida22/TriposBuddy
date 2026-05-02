@@ -16,7 +16,7 @@
         {{ m.group.name }}
       </a>
       <span class="group-meta">
-        {{ m.group.member_count }} member{{ 's' if m.group.member_count != 1 }}
+        {{ member_counts.get(m.group_id, 0) }} member{{ 's' if member_counts.get(m.group_id, 0) != 1 }}
         · {% if m.role.value == 'admin' %}<span class="badge badge-admin">Admin</span>{% else %}<span class="badge badge-member">Member</span>{% endif %}
         · {% if m.group.is_public %}Public{% else %}Private{% endif %}
       </span>

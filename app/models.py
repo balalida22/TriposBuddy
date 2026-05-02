@@ -125,6 +125,11 @@ class UserQuestionProgress(db.Model):
 
     __table_args__ = (
         db.UniqueConstraint('user_id', 'question_id', name='uq_user_question'),
+        # Composite indexes for the two most frequent query patterns:
+        # tracker page / heatmap viewer border (filter by user + solved)
+        db.Index('ix_uqp_user_solved', 'user_id', 'solved'),
+        # hover tooltip (filter by question + solved)
+        db.Index('ix_uqp_question_solved', 'question_id', 'solved'),
     )
 
 
@@ -175,6 +180,7 @@ class GroupMembership(db.Model):
 
     __table_args__ = (
         db.UniqueConstraint('group_id', 'user_id', name='uq_group_user'),
+        db.Index('ix_gm_user_id', 'user_id'),
     )
 
 
@@ -193,6 +199,10 @@ class GroupJoinRequest(db.Model):
     resolved_at = db.Column(db.DateTime, nullable=True)
     resolved_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
+    __table_args__ = (
+        db.Index('ix_gjr_user_status', 'user_id', 'status'),
+    )
+
 
 class Notification(db.Model):
     __tablename__ = 'notifications'
@@ -202,3 +212,7 @@ class Notification(db.Model):
     message = db.Column(db.Text, nullable=False)
     read = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.Index('ix_notif_user_read', 'user_id', 'read'),
+    )

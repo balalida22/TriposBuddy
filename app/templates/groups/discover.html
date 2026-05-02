@@ -16,7 +16,7 @@
         {{ group.name }}
       </a>
       <span class="group-meta">
-        {{ group.member_count }} member{{ 's' if group.member_count != 1 }}
+        {{ member_counts.get(group.id, 0) }} member{{ 's' if member_counts.get(group.id, 0) != 1 }}
         · Admin: {{ group.creator.username }}
         · {% if group.auto_approve %}Auto-join{% else %}Approval required{% endif %}
       </span>

@@ -4,7 +4,7 @@
 {% block content %}
 <div class="page-header">
   <h1>My Tracker</h1>
-  <p class="page-subtitle">Click a cell to mark it solved (green) or unsolved.</p>
+  <p class="page-subtitle">Click a cell to mark it solved (green) or unsolved. Click and drag to paint multiple cells.</p>
 </div>
 
 <div class="tracker-wrapper">
@@ -26,7 +26,7 @@
           <tr>
             <td class="row-label">Q{{ row.q_num }}</td>
             {% for cell in row.cells %}
-            {% include 'tracker/_cell.html' %}
+            <td>{% include 'tracker/_cell.html' %}</td>
             {% endfor %}
           </tr>
           {% endfor %}
@@ -36,4 +36,73 @@
   </div>
   {% endfor %}
 </div>
+
+<script>
+(function () {
+  let isDragging = false;
+  let dragTargetSolved = null;
+  let hasMoved = false;
+  let startX = 0, startY = 0;
+  const draggedCells = new Set();
+  const MIN_DRAG_PX = 5;
+
+  function cellAt(x, y) {
+    const el = document.elementFromPoint(x, y);
+    if (!el) return null;
+    // Direct hit on the cell div
+    let cell = el.closest('.tracker-cell:not(.disabled)');
+    // Fallback: pointer is in the <td> padding zone — find the cell inside
+    if (!cell) {
+      const td = el.closest('td');
+      if (td) cell = td.querySelector('.tracker-cell:not(.disabled)');
+    }
+    return cell && cell.hasAttribute('hx-post') ? cell : null;
+  }
+
+  function tryToggle(cell) {
+    if (!cell || draggedCells.has(cell.id)) return;
+    if (cell.classList.contains('solved') !== dragTargetSolved) {
+      draggedCells.add(cell.id);
+      cell.click();
+    }
+  }
+
+  document.addEventListener('mousedown', function (e) {
+    const cell = cellAt(e.clientX, e.clientY);
+    if (!cell) return;
+    // e.preventDefault() suppresses the natural click event (which would double-toggle)
+    // and prevents text selection while dragging.
+    e.preventDefault();
+    isDragging = true;
+    hasMoved = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    dragTargetSolved = !cell.classList.contains('solved');
+    draggedCells.clear();
+    draggedCells.add(cell.id);
+    cell.click(); // toggle the initial cell immediately
+  }, { passive: false });
+
+  document.addEventListener('pointermove', function (e) {
+    if (!isDragging) return;
+    if (!hasMoved) {
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (Math.sqrt(dx * dx + dy * dy) < MIN_DRAG_PX) return;
+      hasMoved = true;
+    }
+    tryToggle(cellAt(e.clientX, e.clientY));
+  });
+
+  function stopDrag() {
+    isDragging = false;
+    hasMoved = false;
+    dragTargetSolved = null;
+    draggedCells.clear();
+  }
+
+  document.addEventListener('mouseup', stopDrag);
+  document.addEventListener('mouseleave', stopDrag);
+})();
+</script>
 {% endblock %}

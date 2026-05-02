@@ -5,6 +5,7 @@ from functools import wraps
 
 from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
+from sqlalchemy import func
 
 from app.admin import bp
 from app.extensions import db, bcrypt
@@ -135,7 +136,13 @@ def revoke_invite(invite_id):
 @require_root_admin
 def groups():
     all_groups = Group.query.order_by(Group.name).all()
-    return render_template('admin/groups.html', groups=all_groups)
+    member_counts = dict(
+        db.session.query(GroupMembership.group_id, func.count(GroupMembership.id))
+        .filter(GroupMembership.group_id.in_([g.id for g in all_groups]))
+        .group_by(GroupMembership.group_id)
+        .all()
+    ) if all_groups else {}
+    return render_template('admin/groups.html', groups=all_groups, member_counts=member_counts)
 
 
 @bp.route('/groups/<int:group_id>/delete', methods=['POST'])

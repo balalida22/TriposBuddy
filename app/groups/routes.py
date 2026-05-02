@@ -2,11 +2,13 @@ import re
 from datetime import datetime
 from functools import wraps
 
-from flask import render_template, redirect, url_for, flash, request, abort, jsonify
+from flask import render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
+from sqlalchemy import func
 
 from app.groups import bp
-from app.groups.heatmap import compute_heatmap, get_cell_solvers, SECTIONS, YEARS, Q_RANGE
+from app.groups.heatmap import compute_heatmap, get_cell_solvers
+from app.constants import SECTIONS, YEARS, Q_RANGE
 from app.extensions import db
 from app.models import (
     Group, GroupMembership, GroupJoinRequest, Notification,
@@ -50,6 +52,18 @@ def _notify(user_id, message):
     db.session.add(Notification(user_id=user_id, message=message))
 
 
+def _member_counts(group_ids):
+    """Return {group_id: count} for the given group IDs in a single query."""
+    if not group_ids:
+        return {}
+    return dict(
+        db.session.query(GroupMembership.group_id, func.count(GroupMembership.id))
+        .filter(GroupMembership.group_id.in_(group_ids))
+        .group_by(GroupMembership.group_id)
+        .all()
+    )
+
+
 # ─── My Groups ──────────────────────────────────────────────────────────────
 
 @bp.route('/')
@@ -62,7 +76,8 @@ def my_groups():
         .order_by(Group.name)
         .all()
     )
-    return render_template('groups/my_groups.html', memberships=memberships)
+    counts = _member_counts([m.group_id for m in memberships])
+    return render_template('groups/my_groups.html', memberships=memberships, member_counts=counts)
 
 
 # ─── Discover ───────────────────────────────────────────────────────────────
@@ -81,11 +96,13 @@ def discover():
             user_id=current_user.id, status=JoinRequestStatus.pending
         ).all()
     }
+    counts = _member_counts([g.id for g in public_groups])
     return render_template(
         'groups/discover.html',
         groups=public_groups,
         my_group_ids=my_group_ids,
         pending_ids=pending_ids,
+        member_counts=counts,
     )
 
 
@@ -227,6 +244,15 @@ def join(slug):
 
 # ─── Leave ──────────────────────────────────────────────────────────────────
 
+@bp.route('/<slug>/leave/confirm')
+@login_required
+def leave_confirm(slug):
+    group = Group.query.filter_by(slug=slug).first_or_404()
+    if not _get_membership(group):
+        return redirect(url_for('groups.group_page', slug=slug))
+    return render_template('groups/leave_warning.html', group=group)
+
+
 @bp.route('/<slug>/leave', methods=['POST'])
 @login_required
 def leave(slug):
@@ -244,11 +270,8 @@ def leave(slug):
     confirm = request.form.get('confirm_delete') == 'true'
 
     if is_last_admin and not confirm:
-        # Show warning page before deleting
-        return render_template(
-            'groups/leave_warning.html',
-            group=group,
-        )
+        # PRG: redirect to GET confirmation page instead of rendering directly
+        return redirect(url_for('groups.leave_confirm', slug=slug))
 
     if is_last_admin and confirm:
         db.session.delete(group)

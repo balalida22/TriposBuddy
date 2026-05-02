@@ -1,11 +1,6 @@
 from app.extensions import db
-from app.models import (
-    GroupMembership, UserQuestionProgress, Question, User, SectionEnum
-)
-
-SECTIONS = [s.value for s in SectionEnum]
-YEARS = list(range(2016, 2026))
-Q_RANGE = range(1, 13)
+from app.models import GroupMembership, UserQuestionProgress, Question, User
+from app.constants import SECTIONS, YEARS, Q_RANGE
 
 
 def solve_fill_color(solved_count, total_members, threshold):
@@ -65,13 +60,15 @@ def compute_heatmap(group, viewer_user):
     qmap = {
         (q.section.value, q.year, q.question_number): q for q in questions
     }
+    max_q = max((q.question_number for q in questions), default=max(Q_RANGE))
+    q_range = range(1, max_q + 1)
 
     heatmap = {}
     for section in SECTIONS:
         heatmap[section] = {}
         for year in YEARS:
             heatmap[section][year] = {}
-            for q_num in Q_RANGE:
+            for q_num in q_range:
                 q = qmap.get((section, year, q_num))
                 if q is None:
                     heatmap[section][year][q_num] = None

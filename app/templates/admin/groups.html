@@ -24,7 +24,7 @@
       <td><a href="{{ url_for('groups.group_page', slug=group.slug) }}">{{ group.name }}</a></td>
       <td><code>{{ group.slug }}</code></td>
       <td>{{ 'Public' if group.is_public else 'Private' }}</td>
-      <td>{{ group.member_count }}</td>
+      <td>{{ member_counts.get(group.id, 0) }}</td>
       <td>{{ group.created_at.strftime('%Y-%m-%d') }}</td>
       <td>
         <form method="POST" action="{{ url_for('admin.delete_group', group_id=group.id) }}" style="display:inline"

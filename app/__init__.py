@@ -31,7 +31,7 @@ def create_app(config_name=None):
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
 
     # Register blueprints
     from app.auth import bp as auth_bp
@@ -73,22 +73,25 @@ def _register_cli(app):
 
         sections = list(SectionEnum)
         years = range(2016, 2026)
-        count = 0
-        for section in sections:
-            for year in years:
-                for q_num in range(1, 13):
-                    exists = Question.query.filter_by(
-                        section=section, year=year, question_number=q_num
-                    ).first()
-                    if not exists:
-                        db.session.add(
-                            Question(
-                                section=section, year=year, question_number=q_num
-                            )
-                        )
-                        count += 1
+
+        # Fetch all existing (section, year, question_number) tuples in one query
+        existing = {
+            (q.section, q.year, q.question_number)
+            for q in Question.query.with_entities(
+                Question.section, Question.year, Question.question_number
+            ).all()
+        }
+
+        new_questions = [
+            Question(section=section, year=year, question_number=q_num)
+            for section in sections
+            for year in years
+            for q_num in range(1, 13)
+            if (section, year, q_num) not in existing
+        ]
+        db.session.add_all(new_questions)
         db.session.commit()
-        click.echo(f'Seeded {count} questions.')
+        click.echo(f'Seeded {len(new_questions)} questions.')
 
     @app.cli.command('create-admin')
     @click.argument('email')
