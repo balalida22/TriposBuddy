@@ -4,6 +4,6 @@ cd /home/tz387/public_html/TriposBuddy
 mkdir -p /home/tz387/logs
 exec gunicorn \
     --workers 2 \
-    --bind 127.0.0.1:5387 \
+    --bind unix:/home/tz387/public_html/TriposBuddy/web.sock \
     --log-file /home/tz387/logs/triposbuddy.log \
     passenger_wsgi:application
