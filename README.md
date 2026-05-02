@@ -194,9 +194,11 @@ See [`PROJECT_INDEX.md`](PROJECT_INDEX.md) for the full URL map, model schema, a
 ## Adding New Dependencies
 
 ```bash
-# Add to requirements.txt, then recompile the lockfile
-uv pip compile requirements.txt -o requirements.txt
+# Add the package with a minimum-version constraint to requirements.txt, then install
 uv pip install -r requirements.txt
 ```
 
-On SRCF deployment, `pip install -r requirements.txt` consumes the same lockfile.
+`requirements.txt` lists direct dependencies with minimum-version constraints (e.g. `flask>=3.0,<4`).
+`pip` and `uv` both resolve the best compatible version available on the target platform — this avoids
+the lockfile mismatch that would occur if a uv-compiled exact-pin file is installed on SRCF's older
+PyPI mirror.
