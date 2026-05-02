@@ -1,9 +1,9 @@
-# ── Reverse proxy to gunicorn Unix socket ───────────────────────────────────
-# .htaccess lives in public_html/TriposBuddy/, so RewriteRule $1 is the path
-# relative to that directory (e.g. "auth/login", not "/TriposBuddy/auth/login").
-# Proxy to http://localhost/$1 so gunicorn receives the stripped path and
-# Flask routes correctly. SCRIPT_NAME is injected by passenger_wsgi.py via
-# the FORCE_SCRIPT_NAME env var — no RequestHeader needed here.
+# ── Reverse proxy to gunicorn (TCP) ─────────────────────────────────────────
+# Gunicorn listens on 127.0.0.1:5387 (see run.sh).
+# .htaccess lives in public_html/TriposBuddy/, so $1 is already the path
+# relative to that directory — proxy to http://127.0.0.1:5387/$1 so Flask
+# receives the stripped path and routes correctly.
+# SCRIPT_NAME is injected by passenger_wsgi.py via FORCE_SCRIPT_NAME env var.
 
 RewriteEngine On
 
@@ -12,7 +12,7 @@ RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
 # Proxy everything else to gunicorn
-RewriteRule ^(.*)$ unix:/home/tz387/public_html/TriposBuddy/web.sock|http://localhost/$1 [P,L]
+RewriteRule ^(.*)$ http://127.0.0.1:5387/$1 [P,L]
 
 # ── Security ────────────────────────────────────────────────────────────────
 Options -Indexes
