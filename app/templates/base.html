@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ 'dark' if current_user.is_authenticated and current_user.dark_mode else 'light' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}TriposBuddy{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      document.body.addEventListener('htmx:configRequest', function (evt) {
+        evt.detail.headers['X-CSRFToken'] =
+          document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+      });
+    });
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="{{ url_for('index') }}" class="nav-brand">TriposBuddy</a>
+    {% if current_user.is_authenticated %}
+    <div class="nav-links">
+      <a href="{{ url_for('tracker.index') }}" {% if request.blueprint == 'tracker' %}class="active"{% endif %}>Tracker</a>
+      <a href="{{ url_for('groups.my_groups') }}" {% if request.blueprint == 'groups' %}class="active"{% endif %}>Groups</a>
+      <a href="{{ url_for('groups.discover') }}">Discover</a>
+      {% if current_user.is_root_admin %}
+      <a href="{{ url_for('admin.index') }}" {% if request.blueprint == 'admin' %}class="active"{% endif %}>Admin</a>
+      {% endif %}
+      <a href="{{ url_for('settings.index') }}" {% if request.blueprint == 'settings' %}class="active"{% endif %}>Settings</a>
+      <a href="{{ url_for('auth.logout') }}" class="nav-logout">Logout</a>
+    </div>
+    {% endif %}
+  </nav>
+
+  {% if current_user.is_authenticated %}
+  <div id="notification-banner"
+       hx-get="{{ url_for('notifications.poll') }}"
+       hx-trigger="load, every 30s"
+       hx-swap="innerHTML">
+  </div>
+  {% endif %}
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+  {% if messages %}
+  <div class="flash-container">
+    {% for category, message in messages %}
+    <div class="flash flash-{{ category }}">
+      {{ message }}
+      <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="tooltip-container" class="tooltip-container" style="display:none;"></div>
+</body>
+</html>

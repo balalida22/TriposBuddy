@@ -1,0 +1,163 @@
+{
+  "project": "TriposBuddy",
+  "generated": "2026-05-02",
+  "description": "Multiuser past-paper tracker for Cambridge IA Engineering students",
+  "stack": {
+    "backend": "Flask 3.0.3",
+    "database": "PostgreSQL (psycopg2-binary 2.9.10)",
+    "orm": "SQLAlchemy 2.0 via Flask-SQLAlchemy 3.1.1",
+    "migrations": "Alembic via Flask-Migrate 4.0.7",
+    "auth": "Flask-Login 0.6.3 + Flask-Bcrypt 1.0.1",
+    "forms_csrf": "Flask-WTF 1.2.1",
+    "frontend": "HTMX 1.9.12 (CDN) + Jinja2 3.1.6",
+    "python": "3.13",
+    "deployment": "SRCF (Apache + Passenger WSGI)"
+  },
+  "entry_points": {
+    "wsgi": "passenger_wsgi.py",
+    "app_factory": "app/__init__.py:create_app",
+    "cli_seed": "flask seed-questions",
+    "cli_admin": "flask create-admin EMAIL USERNAME PASSWORD",
+    "root_redirect": "GET / -> /tracker or /auth/login"
+  },
+  "blueprints": {
+    "auth": {
+      "prefix": "/auth",
+      "files": ["app/auth/__init__.py", "app/auth/routes.py", "app/auth/forms.py"],
+      "routes": ["GET/POST /auth/login", "GET /auth/logout", "GET/POST /auth/register"]
+    },
+    "tracker": {
+      "prefix": "/tracker",
+      "files": ["app/tracker/__init__.py", "app/tracker/routes.py"],
+      "routes": ["GET /tracker/", "POST /tracker/toggle"]
+    },
+    "groups": {
+      "prefix": "/groups",
+      "files": ["app/groups/__init__.py", "app/groups/routes.py", "app/groups/heatmap.py"],
+      "routes": [
+        "GET /groups/", "GET /groups/discover",
+        "GET/POST /groups/new", "GET /groups/<slug>",
+        "POST /groups/<slug>/join", "POST /groups/<slug>/leave",
+        "GET/POST /groups/<slug>/settings",
+        "GET /groups/<slug>/requests",
+        "POST /groups/<slug>/requests/<id>/approve",
+        "POST /groups/<slug>/requests/<id>/reject",
+        "POST /groups/<slug>/members/<id>/promote",
+        "POST /groups/<slug>/members/<id>/demote",
+        "POST /groups/<slug>/members/<id>/remove",
+        "GET /groups/<slug>/heatmap/cell/<q_id>/solvers"
+      ]
+    },
+    "settings": {
+      "prefix": "/settings",
+      "files": ["app/settings/__init__.py", "app/settings/routes.py"],
+      "routes": ["GET /settings/", "POST /settings/profile", "POST /settings/password", "POST /settings/darkmode"]
+    },
+    "admin": {
+      "prefix": "/admin",
+      "files": ["app/admin/__init__.py", "app/admin/routes.py"],
+      "guard": "require_root_admin decorator",
+      "routes": [
+        "GET /admin/", "GET /admin/users",
+        "POST /admin/users/<id>/reset-password", "POST /admin/users/<id>/delete",
+        "GET /admin/invites", "POST /admin/invites/generate", "POST /admin/invites/<id>/revoke",
+        "GET /admin/groups", "POST /admin/groups/<id>/delete",
+        "GET /admin/questions", "POST /admin/questions/add", "POST /admin/questions/<id>/delete"
+      ]
+    },
+    "notifications": {
+      "prefix": "/notifications",
+      "files": ["app/notifications/__init__.py", "app/notifications/routes.py"],
+      "routes": ["GET /notifications/poll", "POST /notifications/<id>/dismiss"]
+    }
+  },
+  "models": {
+    "User": {
+      "table": "users",
+      "key_fields": ["email (unique)", "username (unique)", "password_hash", "is_root_admin", "dark_mode"],
+      "relationships": ["progress", "memberships", "sent_join_requests", "notifications"]
+    },
+    "Invitation": {
+      "table": "invitations",
+      "key_fields": ["token (unique)", "created_by", "used_by", "revoked"],
+      "properties": ["is_valid"]
+    },
+    "Question": {
+      "table": "questions",
+      "key_fields": ["section (enum: 1P1/1P2/1P3/1P4)", "year", "question_number"],
+      "unique_constraint": "(section, year, question_number)",
+      "properties": ["label"],
+      "default_count": 480
+    },
+    "UserQuestionProgress": {
+      "table": "user_question_progress",
+      "key_fields": ["user_id", "question_id", "solved", "solved_at"],
+      "unique_constraint": "(user_id, question_id)"
+    },
+    "Group": {
+      "table": "groups",
+      "key_fields": ["name", "slug (unique)", "description", "is_public", "auto_approve", "sat_threshold", "created_by"],
+      "properties": ["member_count", "admin_count"]
+    },
+    "GroupMembership": {
+      "table": "group_memberships",
+      "key_fields": ["group_id", "user_id", "role (enum: admin/member)"],
+      "unique_constraint": "(group_id, user_id)"
+    },
+    "GroupJoinRequest": {
+      "table": "group_join_requests",
+      "key_fields": ["group_id", "user_id", "status (enum: pending/approved/rejected)", "resolved_by"]
+    },
+    "Notification": {
+      "table": "notifications",
+      "key_fields": ["user_id", "message", "read"]
+    }
+  },
+  "templates": {
+    "base": "app/templates/base.html",
+    "auth": ["login.html", "register.html", "invalid_invite.html"],
+    "tracker": ["index.html", "_cell.html (HTMX swap target)"],
+    "groups": [
+      "my_groups.html", "discover.html", "create.html",
+      "group_public.html", "group_member.html (heatmap)",
+      "group_settings.html", "join_requests.html",
+      "leave_warning.html", "_tooltip.html (HTMX partial)"
+    ],
+    "settings": ["index.html"],
+    "admin": ["index.html", "users.html", "invites.html", "groups.html", "questions.html"],
+    "notifications": ["_banner.html (HTMX partial, 30s poll)"]
+  },
+  "static": {
+    "css": "app/static/css/main.css (CSS custom properties, dark mode via [data-theme])"
+  },
+  "security": {
+    "csrf": "Flask-WTF; HTMX uses X-CSRFToken header via htmx:configRequest",
+    "passwords": "bcrypt",
+    "invites": "secrets.token_urlsafe(32), single-use",
+    "email_restriction": "@cam.ac.uk enforced server-side in RegisterForm",
+    "admin_guard": "require_root_admin decorator on all /admin/* routes",
+    "group_guard": "membership check before heatmap/member data"
+  },
+  "htmx_patterns": {
+    "tracker_toggle": "POST /tracker/toggle → returns _cell.html outerHTML swap",
+    "heatmap_tooltip": "GET /groups/<slug>/heatmap/cell/<q_id>/solvers on mouseenter",
+    "notification_banner": "GET /notifications/poll on load + every 30s"
+  },
+  "dependency_management": {
+    "local": "uv (uv pip compile requirements.txt -o requirements.txt)",
+    "deployment": "pip + venv (pip install -r requirements.txt)",
+    "lockfile": "requirements.txt (uv-compiled, pip-compatible)"
+  },
+  "deployment": {
+    "platform": "SRCF (srcf.net)",
+    "wsgi": "passenger_wsgi.py (Apache Passenger)",
+    "database_host": "postgres (SRCF internal hostname)",
+    "database_url_format": "postgresql://CRSID:PW@postgres/CRSID"
+  },
+  "file_counts": {
+    "python_source": 18,
+    "html_templates": 22,
+    "css_files": 1,
+    "total_source_files": 41
+  }
+}

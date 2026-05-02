@@ -1,0 +1,17 @@
+{% for notif in notifications %}
+<div class="notification-banner" id="notif-{{ notif.id }}">
+  <span class="notif-message">{{ notif.message }}</span>
+  <button class="notif-close"
+          hx-post="{{ url_for('notifications.dismiss', notif_id=notif.id) }}"
+          hx-target="#notif-{{ notif.id }}"
+          hx-swap="outerHTML"
+          aria-label="Dismiss">×</button>
+</div>
+<script>
+  // Auto-dismiss after 5 seconds
+  setTimeout(function() {
+    var el = document.getElementById('notif-{{ notif.id }}');
+    if (el) el.remove();
+  }, 5000);
+</script>
+{% endfor %}

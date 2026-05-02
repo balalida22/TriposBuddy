@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Register — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1>Create Account</h1>
+  <p class="auth-subtitle">You have a valid invite. Complete registration below.</p>
+
+  <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+    {{ form.hidden_tag() }}
+    <input type="hidden" name="token" value="{{ token }}">
+
+    <div class="form-group">
+      {{ form.email.label }}
+      {{ form.email(class="form-input", placeholder="crsid@cam.ac.uk") }}
+      {% for error in form.email.errors %}
+      <span class="form-error">{{ error }}</span>
+      {% endfor %}
+    </div>
+
+    <div class="form-group">
+      {{ form.username.label }}
+      {{ form.username(class="form-input", placeholder="e.g. abc123") }}
+      <span class="form-hint">Defaults to your CRSID. Can be changed later.</span>
+      {% for error in form.username.errors %}
+      <span class="form-error">{{ error }}</span>
+      {% endfor %}
+    </div>
+
+    <div class="form-group">
+      {{ form.password.label }}
+      {{ form.password(class="form-input") }}
+      <span class="form-hint">At least 8 characters.</span>
+      {% for error in form.password.errors %}
+      <span class="form-error">{{ error }}</span>
+      {% endfor %}
+    </div>
+
+    <div class="form-group">
+      {{ form.password2.label }}
+      {{ form.password2(class="form-input") }}
+      {% for error in form.password2.errors %}
+      <span class="form-error">{{ error }}</span>
+      {% endfor %}
+    </div>
+
+    {{ form.submit(class="btn btn-primary btn-full") }}
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Users — Admin — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Users</h1>
+  <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">← Dashboard</a>
+</div>
+
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th>Username</th>
+      <th>Email</th>
+      <th>Role</th>
+      <th>Joined</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for user in users %}
+    <tr>
+      <td>{{ user.username }}</td>
+      <td>{{ user.email }}</td>
+      <td>
+        {% if user.is_root_admin %}
+          <span class="badge badge-admin">Root Admin</span>
+        {% else %}
+          <span class="badge badge-member">User</span>
+        {% endif %}
+      </td>
+      <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+      <td>
+        {% if not user.is_root_admin %}
+        <form method="POST" action="{{ url_for('admin.reset_password', user_id=user.id) }}" style="display:inline"
+              onsubmit="return confirm('Reset password for {{ user.username }}?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-secondary btn-sm">Reset PW</button>
+        </form>
+        <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" style="display:inline"
+              onsubmit="return confirm('Permanently delete {{ user.username }}?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        </form>
+        {% else %}
+          <span class="text-muted">—</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

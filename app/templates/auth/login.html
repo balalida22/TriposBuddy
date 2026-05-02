@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}Login — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h1>TriposBuddy</h1>
+  <p class="auth-subtitle">IA Engineering Past Paper Tracker</p>
+
+  <form method="POST" action="{{ url_for('auth.login') }}" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="form-group">
+      {{ form.email.label }}
+      {{ form.email(class="form-input", placeholder="crsid@cam.ac.uk") }}
+      {% for error in form.email.errors %}
+      <span class="form-error">{{ error }}</span>
+      {% endfor %}
+    </div>
+
+    <div class="form-group">
+      {{ form.password.label }}
+      {{ form.password(class="form-input") }}
+      {% for error in form.password.errors %}
+      <span class="form-error">{{ error }}</span>
+      {% endfor %}
+    </div>
+
+    {{ form.submit(class="btn btn-primary btn-full") }}
+  </form>
+
+  <p class="auth-note">Registration is invite-only. Contact the administrator if you need access.</p>
+</div>
+{% endblock %}

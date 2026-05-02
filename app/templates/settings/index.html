@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Settings — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Settings</h1>
+</div>
+
+<!-- Profile -->
+<div class="settings-section">
+  <h2>Profile</h2>
+  <form method="POST" action="{{ url_for('settings.update_profile') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" class="form-input"
+             value="{{ current_user.username }}" maxlength="50" required>
+      <span class="form-hint">Shown to other group members. Default is your CRSID.</span>
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="text" class="form-input" value="{{ current_user.email }}" disabled>
+    </div>
+    <button type="submit" class="btn btn-primary">Update Username</button>
+  </form>
+</div>
+
+<!-- Password -->
+<div class="settings-section">
+  <h2>Change Password</h2>
+  <form method="POST" action="{{ url_for('settings.change_password') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group">
+      <label for="current_password">Current Password</label>
+      <input type="password" id="current_password" name="current_password" class="form-input" required>
+    </div>
+    <div class="form-group">
+      <label for="new_password">New Password</label>
+      <input type="password" id="new_password" name="new_password" class="form-input" required minlength="8">
+    </div>
+    <div class="form-group">
+      <label for="confirm_password">Confirm New Password</label>
+      <input type="password" id="confirm_password" name="confirm_password" class="form-input" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Change Password</button>
+  </form>
+</div>
+
+<!-- Appearance -->
+<div class="settings-section">
+  <h2>Appearance</h2>
+  <div class="form-group form-group-inline">
+    <span>Dark Mode</span>
+    <form method="POST" action="{{ url_for('settings.toggle_darkmode') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-secondary">
+        {% if current_user.dark_mode %}Switch to Light Mode{% else %}Switch to Dark Mode{% endif %}
+      </button>
+    </form>
+  </div>
+  <span class="form-hint">Current: {{ 'Dark' if current_user.dark_mode else 'Light' }}</span>
+</div>
+{% endblock %}

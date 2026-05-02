@@ -1,0 +1,76 @@
+# ─── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[oc]
+*.so
+.Python
+
+# ─── Build / packaging ───────────────────────────────────────────────────────
+build/
+dist/
+wheels/
+*.egg-info/
+.eggs/
+
+# ─── Virtual environments ────────────────────────────────────────────────────
+# uv creates .venv by default; include common alternatives
+.venv/
+venv/
+env/
+ENV/
+
+# ─── Environment / secrets ───────────────────────────────────────────────────
+# .env.example IS committed (template); .env is NOT (contains real secrets)
+.env
+
+# ─── Flask instance folder ───────────────────────────────────────────────────
+# Flask writes instance-specific config here; never commit
+instance/
+
+# ─── Local SQLite database (dev only) ───────────────────────────────────────
+# Used when DATABASE_URL=sqlite:///triposbuddy.db in local .env
+*.db
+*.sqlite
+*.sqlite3
+
+# ─── Flask-Migrate / Alembic ────────────────────────────────────────────────
+# migrations/ SHOULD be committed — it is the authoritative schema history.
+# Only the generated .pyc files inside it are excluded (covered by __pycache__).
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── Testing & coverage ──────────────────────────────────────────────────────
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+
+# ─── uv ──────────────────────────────────────────────────────────────────────
+# uv cache; not needed in repo
+.uv/
+
+# ─── IDEs & editors ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+
+# ─── OS artefacts ────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ─── SRCF / deployment ───────────────────────────────────────────────────────
+# Passenger log files that may appear during SRCF testing
+passenger.log
+passenger_wsgi.log

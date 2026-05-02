@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}{{ group.name }} — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ group.name }}</h1>
+  <div class="page-header-actions">
+    {% if membership.role.value == 'admin' %}
+      <a href="{{ url_for('groups.settings', slug=group.slug) }}" class="btn btn-secondary btn-sm">Settings</a>
+      {% if pending_count > 0 %}
+      <a href="{{ url_for('groups.join_requests', slug=group.slug) }}" class="btn btn-warning btn-sm">
+        Requests ({{ pending_count }})
+      </a>
+      {% endif %}
+    {% endif %}
+    <form method="POST" action="{{ url_for('groups.leave', slug=group.slug) }}"
+          onsubmit="return confirm('Leave this group?')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-danger btn-sm">Leave</button>
+    </form>
+  </div>
+</div>
+
+{% if group.description %}
+<p class="group-description-header">{{ group.description }}</p>
+{% endif %}
+
+<!-- Heatmap legend -->
+<div class="heatmap-legend">
+  <span class="legend-item">
+    <span class="legend-swatch" style="background:#fff; border:2px solid #ccc;"></span> 0%
+  </span>
+  <span class="legend-item">
+    <span class="legend-swatch" style="background:#22c55e;"></span> ≥ {{ (group.sat_threshold * 100)|round|int }}% of group
+  </span>
+  <span class="legend-item">
+    <span class="legend-cell-border"></span> You solved it
+  </span>
+</div>
+
+<!-- Heatmap -->
+<div class="tracker-wrapper" id="group-heatmap">
+  {% for section in sections %}
+  <div class="tracker-section">
+    <h2 class="section-title">{{ section }}</h2>
+    <div class="matrix-scroll">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th class="row-label-header"></th>
+            {% for year in years %}
+            <th class="year-header">{{ year }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for q_num in q_range %}
+          <tr>
+            <td class="row-label">Q{{ q_num }}</td>
+            {% for year in years %}
+            {% set cell = heatmap[section][year][q_num] %}
+            <td>
+              {% if cell %}
+              <div class="heatmap-cell"
+                   style="background-color: {{ cell.fill_color }}; border-color: {{ cell.border_color }};"
+                   hx-get="{{ url_for('groups.cell_solvers', slug=group.slug, question_id=cell.question_id) }}"
+                   hx-trigger="mouseenter"
+                   hx-target="#tooltip-container"
+                   hx-swap="innerHTML"
+                   onmouseenter="showTooltip(event)"
+                   onmouseleave="hideTooltip()"
+                   title="{{ section }} {{ year }} Q{{ q_num }}: {{ cell.solve_count }}/{{ cell.total_members }} solved">
+              </div>
+              {% else %}
+              <div class="heatmap-cell disabled"></div>
+              {% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Members list -->
+<div class="members-section">
+  <h2>Members ({{ members|length }})</h2>
+  <div class="members-list">
+    {% for m in members %}
+    <div class="member-row">
+      <span class="member-name">{{ m.user.username }}</span>
+      <span class="badge {{ 'badge-admin' if m.role.value == 'admin' else 'badge-member' }}">
+        {{ m.role.value }}
+      </span>
+      {% if membership.role.value == 'admin' and m.user_id != current_user.id %}
+      <div class="member-actions">
+        {% if m.role.value == 'member' %}
+        <form method="POST" action="{{ url_for('groups.promote_member', slug=group.slug, user_id=m.user_id) }}" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-link btn-sm">Promote</button>
+        </form>
+        {% else %}
+        <form method="POST" action="{{ url_for('groups.demote_member', slug=group.slug, user_id=m.user_id) }}" style="display:inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-link btn-sm">Demote</button>
+        </form>
+        {% endif %}
+        <form method="POST" action="{{ url_for('groups.remove_member', slug=group.slug, user_id=m.user_id) }}" style="display:inline"
+              onsubmit="return confirm('Remove {{ m.user.username }} from group?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-link btn-sm btn-danger-link">Remove</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  function showTooltip(event) {
+    const tooltip = document.getElementById('tooltip-container');
+    tooltip.style.display = 'block';
+    tooltip.style.left = (event.pageX + 12) + 'px';
+    tooltip.style.top = (event.pageY + 12) + 'px';
+  }
+  function hideTooltip() {
+    const tooltip = document.getElementById('tooltip-container');
+    tooltip.style.display = 'none';
+    tooltip.innerHTML = '';
+  }
+</script>
+{% endblock %}

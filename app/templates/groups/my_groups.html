@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}My Groups — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>My Groups</h1>
+  <a href="{{ url_for('groups.create') }}" class="btn btn-primary">+ New Group</a>
+</div>
+
+{% if memberships %}
+<div class="group-list">
+  {% for m in memberships %}
+  <div class="group-card">
+    <div class="group-card-info">
+      <a href="{{ url_for('groups.group_page', slug=m.group.slug) }}" class="group-name">
+        {{ m.group.name }}
+      </a>
+      <span class="group-meta">
+        {{ m.group.member_count }} member{{ 's' if m.group.member_count != 1 }}
+        · {% if m.role.value == 'admin' %}<span class="badge badge-admin">Admin</span>{% else %}<span class="badge badge-member">Member</span>{% endif %}
+        · {% if m.group.is_public %}Public{% else %}Private{% endif %}
+      </span>
+      {% if m.group.description %}
+      <p class="group-description">{{ m.group.description }}</p>
+      {% endif %}
+    </div>
+    <a href="{{ url_for('groups.group_page', slug=m.group.slug) }}" class="btn btn-secondary btn-sm">
+      View →
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <p>You haven't joined any groups yet.</p>
+  <a href="{{ url_for('groups.discover') }}" class="btn btn-secondary">Browse Groups</a>
+  <a href="{{ url_for('groups.create') }}" class="btn btn-primary">Create a Group</a>
+</div>
+{% endif %}
+{% endblock %}

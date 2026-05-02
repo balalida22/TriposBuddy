@@ -1,0 +1,12 @@
+<div class="tooltip-box">
+  <div class="tooltip-title">{{ question_label }}</div>
+  {% if solvers %}
+  <ul class="tooltip-solvers">
+    {% for username in solvers %}
+    <li>{{ username }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="tooltip-empty">No one in this group has solved this yet.</p>
+  {% endif %}
+</div>

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Create Group — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Create a Group</h1>
+</div>
+
+<div class="form-card">
+  <form method="POST" action="{{ url_for('groups.create') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-group">
+      <label for="name">Group Name <span class="required">*</span></label>
+      <input type="text" id="name" name="name" class="form-input" required maxlength="100"
+             value="{{ request.form.get('name', '') }}">
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" class="form-input" rows="3">{{ request.form.get('description', '') }}</textarea>
+    </div>
+
+    <div class="form-group form-group-inline">
+      <label>
+        <input type="checkbox" name="is_public" {% if request.form.get('is_public') or request.method == 'GET' %}checked{% endif %}>
+        Publicly visible (appears on Discover page)
+      </label>
+    </div>
+
+    <div class="form-group form-group-inline">
+      <label>
+        <input type="checkbox" name="auto_approve" {% if request.form.get('auto_approve') or request.method == 'GET' %}checked{% endif %}>
+        Auto-approve join requests
+      </label>
+    </div>
+
+    <div class="form-group">
+      <label for="sat_threshold">Heatmap Saturation Threshold</label>
+      <input type="number" id="sat_threshold" name="sat_threshold" class="form-input form-input-short"
+             min="0.01" max="1.0" step="0.01" value="{{ request.form.get('sat_threshold', '0.67') }}">
+      <span class="form-hint">Fraction of members needed for full green (e.g. 0.67 = 2/3).</span>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Create Group</button>
+      <a href="{{ url_for('groups.my_groups') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

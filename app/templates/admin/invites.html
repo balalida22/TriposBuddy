@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Invites — Admin — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Invite Management</h1>
+  <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">← Dashboard</a>
+</div>
+
+<div class="admin-action-bar">
+  <form method="POST" action="{{ url_for('admin.generate_invite') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button type="submit" class="btn btn-primary">Generate New Invite Link</button>
+  </form>
+</div>
+
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th>Token (first 12)</th>
+      <th>Status</th>
+      <th>Used By</th>
+      <th>Created</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for invite in invites %}
+    <tr>
+      <td><code>{{ invite.token[:12] }}…</code></td>
+      <td>
+        {% if invite.revoked %}
+          <span class="badge badge-revoked">Revoked</span>
+        {% elif invite.used_by %}
+          <span class="badge badge-used">Used</span>
+        {% else %}
+          <span class="badge badge-active">Active</span>
+        {% endif %}
+      </td>
+      <td>
+        {% if invite.used_by_user %}{{ invite.used_by_user.username }}{% else %}—{% endif %}
+      </td>
+      <td>{{ invite.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td>
+        {% if invite.is_valid %}
+        <form method="POST" action="{{ url_for('admin.revoke_invite', invite_id=invite.id) }}" style="display:inline"
+              onsubmit="return confirm('Revoke this invite?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger btn-sm">Revoke</button>
+        </form>
+        {% else %}
+          <span class="text-muted">—</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Discover Groups — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Discover Groups</h1>
+  <a href="{{ url_for('groups.create') }}" class="btn btn-primary">+ New Group</a>
+</div>
+
+{% if groups %}
+<div class="group-list">
+  {% for group in groups %}
+  <div class="group-card">
+    <div class="group-card-info">
+      <a href="{{ url_for('groups.group_page', slug=group.slug) }}" class="group-name">
+        {{ group.name }}
+      </a>
+      <span class="group-meta">
+        {{ group.member_count }} member{{ 's' if group.member_count != 1 }}
+        · Admin: {{ group.creator.username }}
+        · {% if group.auto_approve %}Auto-join{% else %}Approval required{% endif %}
+      </span>
+      {% if group.description %}
+      <p class="group-description">{{ group.description }}</p>
+      {% endif %}
+    </div>
+    <div class="group-card-actions">
+      {% if group.id in my_group_ids %}
+        <span class="badge badge-member">Joined</span>
+      {% elif group.id in pending_ids %}
+        <span class="badge badge-pending">Pending</span>
+      {% else %}
+        <form method="POST" action="{{ url_for('groups.join', slug=group.slug) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-primary btn-sm">
+            {% if group.auto_approve %}Join{% else %}Request to Join{% endif %}
+          </button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <p>No public groups yet.</p>
+  <a href="{{ url_for('groups.create') }}" class="btn btn-primary">Create the first one</a>
+</div>
+{% endif %}
+{% endblock %}

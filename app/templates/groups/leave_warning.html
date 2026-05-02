@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Leave Group — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Leave Group</h1>
+</div>
+
+<div class="warning-card">
+  <div class="warning-icon">⚠</div>
+  <h2>You are the last admin of "{{ group.name }}"</h2>
+  <p>
+    If you leave, <strong>this group and all its data will be permanently deleted</strong>.
+    This cannot be undone.
+  </p>
+  <p>To keep the group alive, first promote another member to admin before leaving.</p>
+
+  <div class="warning-actions">
+    <form method="POST" action="{{ url_for('groups.leave', slug=group.slug) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="confirm_delete" value="true">
+      <button type="submit" class="btn btn-danger">Delete Group & Leave</button>
+    </form>
+    <a href="{{ url_for('groups.group_page', slug=group.slug) }}" class="btn btn-secondary">Cancel</a>
+  </div>
+</div>
+{% endblock %}

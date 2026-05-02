@@ -1,0 +1,16 @@
+{% if cell.q %}
+<td>
+  <div id="cell-{{ cell.q.id }}"
+       class="tracker-cell{% if cell.solved %} solved{% endif %}"
+       hx-post="{{ url_for('tracker.toggle') }}"
+       hx-vals='{"question_id": "{{ cell.q.id }}"}'
+       hx-target="#cell-{{ cell.q.id }}"
+       hx-swap="outerHTML"
+       title="{{ cell.q.label }}">
+  </div>
+</td>
+{% else %}
+<td>
+  <div class="tracker-cell disabled"></div>
+</td>
+{% endif %}

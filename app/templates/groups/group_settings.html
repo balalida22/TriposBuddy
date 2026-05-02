@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Settings — {{ group.name }} — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Group Settings: {{ group.name }}</h1>
+  <a href="{{ url_for('groups.group_page', slug=group.slug) }}" class="btn btn-secondary">← Back</a>
+</div>
+
+<div class="alert alert-warning">
+  <strong>Warning:</strong> Changing visibility or the group slug (via name change) affects how members and others find this group.
+</div>
+
+<div class="form-card">
+  <form method="POST" action="{{ url_for('groups.settings', slug=group.slug) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-group">
+      <label for="name">Group Name <span class="required">*</span></label>
+      <input type="text" id="name" name="name" class="form-input" required maxlength="100"
+             value="{{ group.name }}">
+      <span class="form-hint">Changing the name changes the group URL. Old URLs will not redirect.</span>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" class="form-input" rows="3">{{ group.description or '' }}</textarea>
+    </div>
+
+    <div class="form-group form-group-inline">
+      <label>
+        <input type="checkbox" name="is_public" {% if group.is_public %}checked{% endif %}>
+        Publicly visible (appears on Discover page)
+      </label>
+    </div>
+
+    <div class="form-group form-group-inline">
+      <label>
+        <input type="checkbox" name="auto_approve" {% if group.auto_approve %}checked{% endif %}>
+        Auto-approve join requests
+      </label>
+    </div>
+
+    <div class="form-group">
+      <label for="sat_threshold">Heatmap Saturation Threshold</label>
+      <input type="number" id="sat_threshold" name="sat_threshold" class="form-input form-input-short"
+             min="0.01" max="1.0" step="0.01" value="{{ group.sat_threshold }}">
+      <span class="form-hint">Fraction of members needed for full green (e.g. 0.67 = 2/3).</span>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Save Changes</button>
+      <a href="{{ url_for('groups.group_page', slug=group.slug) }}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

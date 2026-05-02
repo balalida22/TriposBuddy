@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Join Requests — {{ group.name }} — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Join Requests: {{ group.name }}</h1>
+  <a href="{{ url_for('groups.group_page', slug=group.slug) }}" class="btn btn-secondary">← Back</a>
+</div>
+
+{% if requests %}
+<div class="request-list">
+  {% for req in requests %}
+  <div class="request-row">
+    <span class="member-name">{{ req.requester.username }}</span>
+    <span class="request-time">{{ req.requested_at.strftime('%Y-%m-%d %H:%M') }}</span>
+    <div class="request-actions">
+      <form method="POST" action="{{ url_for('groups.approve_request', slug=group.slug, req_id=req.id) }}" style="display:inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-primary btn-sm">Approve</button>
+      </form>
+      <form method="POST" action="{{ url_for('groups.reject_request', slug=group.slug, req_id=req.id) }}" style="display:inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-secondary btn-sm">Reject</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <p>No pending join requests.</p>
+</div>
+{% endif %}
+{% endblock %}

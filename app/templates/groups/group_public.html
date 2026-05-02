@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}{{ group.name }} — TriposBuddy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ group.name }}</h1>
+  <span class="badge {{ 'badge-public' if group.is_public else 'badge-private' }}">
+    {{ 'Public' if group.is_public else 'Private' }}
+  </span>
+</div>
+
+<div class="group-info-card">
+  <div class="group-info-row">
+    <span class="info-label">Admin</span>
+    <span>{{ group.creator.username }}</span>
+  </div>
+  <div class="group-info-row">
+    <span class="info-label">Members</span>
+    <span>{{ group.member_count }}</span>
+  </div>
+  <div class="group-info-row">
+    <span class="info-label">Joining</span>
+    <span>{{ 'Auto-approved' if group.auto_approve else 'Requires approval' }}</span>
+  </div>
+  {% if group.description %}
+  <div class="group-info-row">
+    <span class="info-label">About</span>
+    <span>{{ group.description }}</span>
+  </div>
+  {% endif %}
+</div>
+
+<div class="group-join-section">
+  {% if pending_request %}
+    <div class="alert alert-info">
+      Your join request is pending approval.
+    </div>
+  {% else %}
+    <p>Join this group to see the heatmap and member progress.</p>
+    <form method="POST" action="{{ url_for('groups.join', slug=group.slug) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-primary">
+        {% if group.auto_approve %}Join Group{% else %}Request to Join{% endif %}
+      </button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}
