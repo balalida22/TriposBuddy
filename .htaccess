@@ -1,10 +1,9 @@
 # ── Reverse proxy to gunicorn Unix socket ───────────────────────────────────
-# .htaccess lives in public_html/TriposBuddy/, so RewriteRule $1 is already
-# the path relative to that directory (e.g. "auth/login", not
-# "/TriposBuddy/auth/login"). Proxy to http://localhost/$1 so gunicorn
-# receives the stripped path and Flask routes correctly.
-# X-Forwarded-Prefix lets ProxyFix set SCRIPT_NAME so url_for() generates
-# URLs with the /TriposBuddy prefix.
+# .htaccess lives in public_html/TriposBuddy/, so RewriteRule $1 is the path
+# relative to that directory (e.g. "auth/login", not "/TriposBuddy/auth/login").
+# Proxy to http://localhost/$1 so gunicorn receives the stripped path and
+# Flask routes correctly. SCRIPT_NAME is injected by passenger_wsgi.py via
+# the FORCE_SCRIPT_NAME env var — no RequestHeader needed here.
 
 RewriteEngine On
 
@@ -12,10 +11,8 @@ RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
-# Proxy everything else to gunicorn (prefix already stripped by .htaccess context)
+# Proxy everything else to gunicorn
 RewriteRule ^(.*)$ unix:/home/tz387/public_html/TriposBuddy/web.sock|http://localhost/$1 [P,L]
-
-RequestHeader set X-Forwarded-Prefix "/TriposBuddy"
 
 # ── Security ────────────────────────────────────────────────────────────────
 Options -Indexes
