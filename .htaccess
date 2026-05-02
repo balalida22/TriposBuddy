@@ -1,19 +1,21 @@
-# ── Passenger WSGI ─────────────────────────────────────────────────────────
-# Replace tz387 with your CRSID if deploying under a different account.
-PassengerEnabled On
-PassengerAppRoot /home/tz387/public_html/TriposBuddy
-PassengerBaseURI /TriposBuddy
-PassengerPython /home/tz387/public_html/TriposBuddy/venv/bin/python3
+# ── Reverse proxy to gunicorn Unix socket ───────────────────────────────────
+# gunicorn binds to web.sock in the project root (see run.sh / systemd service).
+# Apache proxies /TriposBuddy/** to it and forwards the prefix so Flask can
+# generate correct absolute URLs via ProxyFix (see passenger_wsgi.py).
 
-# ── Static files ────────────────────────────────────────────────────────────
-# Let Apache serve files that exist on disk (e.g. app/static/**) directly,
-# bypassing Passenger for slightly better performance.
 RewriteEngine On
+
+# Let Apache serve existing static files directly (app/static/**)
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
 
+# Proxy everything else to gunicorn
+RewriteRule ^(.*)$ unix:/home/tz387/public_html/TriposBuddy/web.sock|http://localhost/TriposBuddy/$1 [P,L]
+
+ProxyPreserveHost On
+RequestHeader set X-Forwarded-Prefix "/TriposBuddy"
+
 # ── Security ────────────────────────────────────────────────────────────────
-# Suppress directory listing and block access to dot-files / config files.
 Options -Indexes
 <FilesMatch "^(\.env.*|.*\.toml|.*\.lock|passenger_wsgi\.py|requirements\.txt)$">
     Require all denied
