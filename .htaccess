@@ -1,12 +1,18 @@
-# ── Phusion Passenger (WSGI) ────────────────────────────────────────────────
-# Passenger runs passenger_wsgi.py directly inside Apache — no socket or
-# external process manager needed. PassengerBaseURI sets SCRIPT_NAME so
-# Flask url_for() generates correct /TriposBuddy-prefixed URLs.
+# ── Reverse proxy to uWSGI (binary protocol) ────────────────────────────────
+# mod_proxy_uwsgi IS enabled on SRCF; mod_proxy_http is NOT.
+# uWSGI listens on 127.0.0.1:5387 using the uWSGI binary protocol (--socket).
+# .htaccess is in public_html/TriposBuddy/ so $1 is path relative to that
+# directory — proxy to uwsgi://127.0.0.1:5387/$1 (no /TriposBuddy prefix).
+# SCRIPT_NAME is injected by passenger_wsgi.py via FORCE_SCRIPT_NAME in .env.
 
-PassengerEnabled On
-PassengerAppRoot /home/tz387/public_html/TriposBuddy
-PassengerBaseURI /TriposBuddy
-PassengerPython /home/tz387/public_html/TriposBuddy/venv/bin/python3
+RewriteEngine On
+
+# Let Apache serve existing static files directly (app/static/**)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Proxy everything else to uWSGI
+RewriteRule ^(.*)$ uwsgi://127.0.0.1:5387/$1 [P,L]
 
 # ── Security ────────────────────────────────────────────────────────────────
 Options -Indexes
