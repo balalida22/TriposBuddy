@@ -1,15 +1,22 @@
-# ── uWSGI proxy via SetHandler ───────────────────────────────────────────────
-# RewriteRule [P] doesn't forward uwsgi:// to mod_proxy_uwsgi.
-# SetHandler proxy:uwsgi://... invokes mod_proxy_uwsgi directly as the
-# content handler for this directory, bypassing RewriteRule entirely.
-# uWSGI listens on 127.0.0.1:5387 (see run.sh / systemd service).
-# SCRIPT_NAME is injected by passenger_wsgi.py via FORCE_SCRIPT_NAME in .env.
+# ── CGI entry point ──────────────────────────────────────────────────────────
+# Apache executes app.cgi directly on the web server — no socket or cross-host
+# communication needed. SRCF supports Options +ExecCGI in user .htaccess.
+# PATH_INFO is set by Apache; SCRIPT_NAME is overridden by the
+# FORCE_SCRIPT_NAME middleware in passenger_wsgi.py.
 
-Options -Indexes
+Options +ExecCGI -Indexes
+AddHandler cgi-script .cgi
 
-# Security: deny access to sensitive files
-<FilesMatch "^(\.env.*|.*\.toml|.*\.lock|passenger_wsgi\.py|requirements\.txt)$">
+RewriteEngine On
+# Serve files that actually exist on disk directly (none expected here,
+# but keeps the rule clean for any future static asset shortcuts)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Route everything else through the CGI script
+RewriteRule ^(.*)$ app.cgi/$1 [L]
+
+# ── Security ────────────────────────────────────────────────────────────────
+<FilesMatch "^(\.env.*|.*\.toml|.*\.lock|passenger_wsgi\.py|requirements\.txt|app\.cgi)$">
     Require all denied
 </FilesMatch>
-
-SetHandler proxy:uwsgi://127.0.0.1:5387
