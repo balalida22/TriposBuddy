@@ -1,21 +1,15 @@
-# ── Reverse proxy to uWSGI (binary protocol) ────────────────────────────────
-# mod_proxy_uwsgi IS enabled on SRCF; mod_proxy_http is NOT.
-# uWSGI listens on 127.0.0.1:5387 using the uWSGI binary protocol (--socket).
-# .htaccess is in public_html/TriposBuddy/ so $1 is path relative to that
-# directory — proxy to uwsgi://127.0.0.1:5387/$1 (no /TriposBuddy prefix).
+# ── uWSGI proxy via SetHandler ───────────────────────────────────────────────
+# RewriteRule [P] doesn't forward uwsgi:// to mod_proxy_uwsgi.
+# SetHandler proxy:uwsgi://... invokes mod_proxy_uwsgi directly as the
+# content handler for this directory, bypassing RewriteRule entirely.
+# uWSGI listens on 127.0.0.1:5387 (see run.sh / systemd service).
 # SCRIPT_NAME is injected by passenger_wsgi.py via FORCE_SCRIPT_NAME in .env.
 
-RewriteEngine On
-
-# Let Apache serve existing static files directly (app/static/**)
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteRule ^ - [L]
-
-# Proxy everything else to uWSGI
-RewriteRule ^(.*)$ uwsgi://127.0.0.1:5387/$1 [P,L]
-
-# ── Security ────────────────────────────────────────────────────────────────
 Options -Indexes
+
+# Security: deny access to sensitive files
 <FilesMatch "^(\.env.*|.*\.toml|.*\.lock|passenger_wsgi\.py|requirements\.txt)$">
     Require all denied
 </FilesMatch>
+
+SetHandler proxy:uwsgi://127.0.0.1:5387
