@@ -17,6 +17,6 @@ RewriteRule ^ - [L]
 RewriteRule ^(.*)$ app.cgi/$1 [L]
 
 # ── Security ────────────────────────────────────────────────────────────────
-<FilesMatch "^(\.env.*|.*\.toml|.*\.lock|passenger_wsgi\.py|requirements\.txt|app\.cgi)$">
+<FilesMatch "^(\.env.*|.*\.toml|.*\.lock|passenger_wsgi\.py|requirements\.txt)$">
     Require all denied
 </FilesMatch>
